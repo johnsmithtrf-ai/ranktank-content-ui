@@ -19,6 +19,8 @@ interface BotQueue {
   running?: Task[]
   queued?: Task[]
   done?: Task[]
+  recently_done?: Task[]
+  done_count?: number
   [key: string]: unknown
 }
 
@@ -217,7 +219,8 @@ function BotColumn({
 
   const running = queue?.running || []
   const queued = queue?.queued || []
-  const done = (queue?.done || []).slice(0, 10)
+  const done = (queue?.recently_done || queue?.done || []).slice(-5).reverse()
+  const doneCount = queue?.done_count || 0
   const total = running.length + queued.length
 
   return (
@@ -237,7 +240,7 @@ function BotColumn({
         <div>
           <h2 style={{ fontSize: '15px', fontWeight: 600 }}>{name}</h2>
           <p style={{ fontSize: '12px', color: '#7d8590', marginTop: '2px' }}>
-            {running.length} running · {queued.length} queued
+            {running.length} running · {queued.length} queued · {doneCount} done
             {total > 0 && <span style={{ color: '#22c55e', marginLeft: '4px' }}>●</span>}
           </p>
         </div>
@@ -279,11 +282,12 @@ function BotColumn({
         </div>
       )}
 
-      {/* Done */}
+      {/* Recently Done */}
       {done.length > 0 && (
         <div>
-          <div style={{ fontSize: '11px', color: '#7d8590', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
-            Recent Done ({done.length})
+          <div style={{ fontSize: '11px', color: '#7d8590', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>✔ Недавно выполнено</span>
+            <span style={{ color: '#22c55e' }}>{doneCount} всего</span>
           </div>
           {done.map((t, i) => <TaskCard key={t.task_id || t.id || i} task={{ ...t, status: 'done' }} />)}
         </div>
