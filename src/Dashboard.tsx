@@ -334,7 +334,7 @@ function HistoryPanel({ onRepeat, onLogout }: { onRepeat: (task: Record<string, 
 
   useEffect(() => {
     fetchHistory()
-    const iv = setInterval(fetchHistory, 10000)
+    const iv = setInterval(fetchHistory, 5000)
     return () => clearInterval(iv)
   }, [fetchHistory])
 
@@ -562,7 +562,7 @@ export default function Dashboard({ onLogout }: Props) {
 
   useEffect(() => {
     fetchQueues()
-    const interval = setInterval(fetchQueues, 5000)
+    const interval = setInterval(fetchQueues, 2000)
     return () => clearInterval(interval)
   }, [fetchQueues])
 
