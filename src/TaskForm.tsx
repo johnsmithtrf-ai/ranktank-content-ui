@@ -57,7 +57,8 @@ export default function TaskForm({ onClose, onAdded, initialValues }: Props) {
         setDropboxFolder(folder)
       }
       setHtmlFormat(initialValues.output_format === 'html')
-      if (initialValues.bot) setBot(initialValues.bot)
+      // Не наследуем bot при повторе — всегда авто-балансировка
+      // if (initialValues.bot) setBot(initialValues.bot)
     }
   }, [])
 
