@@ -1,63 +1,79 @@
-const API_BASE = 'https://content-api.startmyonlinecourses.com';
+const API = 'https://content-api.startmyonlinecourses.com'
 
-export async function login(username: string, password: string) {
-  const r = await fetch(`${API_BASE}/login`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({username, password})
-  });
-  if (!r.ok) throw new Error('Login failed');
-  const data = await r.json();
-  localStorage.setItem('token', data.access_token || data.token);
-  return data;
+function getToken() {
+  return localStorage.getItem('token') || ''
 }
 
-export function getToken() {
-  return localStorage.getItem('token') || '';
+function clearToken() {
+  localStorage.removeItem('token')
+}
+
+async function apiFetch(path: string, opts: RequestInit = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+      ...((opts.headers as Record<string, string>) || {}),
+    },
+  })
+  if (res.status === 401) {
+    clearToken()
+    throw new Error('Unauthorized')
+  }
+  return res.json()
+}
+
+export async function login(username: string, password: string) {
+  const res = await fetch(`${API}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+  return res.json()
+}
+
+export function saveToken(token: string) {
+  localStorage.setItem('token', token)
+}
+
+export function isLoggedIn() {
+  return !!getToken()
 }
 
 export function logout() {
-  localStorage.removeItem('token');
+  clearToken()
 }
 
 export async function getQueues() {
-  const r = await fetch(`${API_BASE}/queues`, {
-    headers: {Authorization: `Bearer ${getToken()}`}
-  });
-  if (r.status === 401) { logout(); throw new Error('Unauthorized'); }
-  return r.json();
-}
-
-export async function addTask(data: unknown) {
-  const r = await fetch(`${API_BASE}/tasks/add`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}`},
-    body: JSON.stringify(data)
-  });
-  if (r.status === 401) { logout(); throw new Error('Unauthorized'); }
-  return r.json();
-}
-
-export async function stopTask(botId: string, taskId: string) {
-  const r = await fetch(`${API_BASE}/tasks/${botId}/${taskId}/stop`, {
-    method: 'POST',
-    headers: {Authorization: `Bearer ${getToken()}`}
-  });
-  return r.json();
-}
-
-export async function deleteTask(taskId: number) {
-  const r = await fetch(`${API_BASE}/tasks/${taskId}`, {
-    method: 'DELETE',
-    headers: {Authorization: `Bearer ${getToken()}`}
-  });
-  return r.json();
+  return apiFetch('/queues')
 }
 
 export async function getHistory() {
-  const r = await fetch(`${API_BASE}/tasks/history`, {
-    headers: {Authorization: `Bearer ${getToken()}`}
-  });
-  if (r.status === 401) { logout(); throw new Error('Unauthorized'); }
-  return r.json();
+  return apiFetch('/tasks/history')
+}
+
+export async function addTask(data: Record<string, unknown>) {
+  return apiFetch('/tasks/add', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function addBulkTasks(data: Record<string, unknown>) {
+  return apiFetch('/tasks/bulk', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function addBatchTasks(data: Record<string, unknown>) {
+  return apiFetch('/tasks/batch', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function getBatchLinks(batchGroupId: string, batchIndex?: number) {
+  const q = batchIndex !== undefined ? `?batch_index=${batchIndex}` : ''
+  return apiFetch(`/tasks/batch/${batchGroupId}/links${q}`)
+}
+
+export async function stopTask(botId: string, taskId: string) {
+  return apiFetch(`/tasks/${botId}/${taskId}/stop`, { method: 'POST', body: JSON.stringify({}) })
+}
+
+export async function getDropboxFolders() {
+  return apiFetch('/dropbox/folders')
 }
