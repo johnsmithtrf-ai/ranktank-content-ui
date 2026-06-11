@@ -191,7 +191,7 @@ async def add_task(req: AddTaskRequest, u=Depends(get_current_user)):
 @app.get("/tasks/history")
 async def get_history(u=Depends(get_current_user)):
     conn = get_db()
-    tasks = conn.execute("SELECT * FROM web_tasks WHERE created_at >= datetime('now', '-5 days') ORDER BY created_at DESC LIMIT 500").fetchall()
+    tasks = conn.execute("SELECT * FROM web_tasks ORDER BY created_at DESC LIMIT 2000").fetchall()
     conn.close()
     return [dict(t) for t in tasks]
 
